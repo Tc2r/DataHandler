@@ -34,7 +34,6 @@ public class Utils {
 	public Utils() {
 	}
 
-
 	// 1st, Attempt to load data from Picasso's Cache, which should be the fastest way.
 	// 2nd, Attempt to load data from External Url, save to Internal Storage.
 	// 3rd, Attempt to load data from Internal Storage if External Url fails.
@@ -45,14 +44,14 @@ public class Utils {
 		target= new Target() {
 			@Override
 			public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-				Log.wtf("Picasso", "OnBitmapLoaded");
+				Log.i("Picasso", "OnBitmapLoaded");
 
-				Drawable drawImage = new BitmapDrawable(context.getResources(), bitmap);
-				FileOutputStream fileOutputStream = null;
 
 				if (context == null){
 					return;
 				}
+
+				FileOutputStream fileOutputStream = null;
 
 				try {
 					fileOutputStream = context.openFileOutput(fileName, Context.MODE_PRIVATE);
@@ -62,6 +61,7 @@ public class Utils {
 				}
 
 				// Save Image To HD
+				Drawable drawImage = new BitmapDrawable(context.getResources(), bitmap);
 				bitmap.compress(Bitmap.CompressFormat.JPEG, 85, fileOutputStream);
 				try {
 					fileOutputStream.close();
@@ -77,38 +77,33 @@ public class Utils {
 
 			@Override
 			public void onBitmapFailed(Drawable errorDrawable) {
-				Log.wtf("Picasso", "OnBitmapFailed");
+				Log.i("Picasso", "OnBitmapFailed");
 
 				// check for local storage of file, load.
 				File file = new File(context.getFilesDir(), fileName);
 				Picasso.with(context).load(file).into(imageView);
-
 			}
 
 			@Override
 			public void onPrepareLoad(Drawable placeHolderDrawable) {
-
-
 			}
 		};
-
-
 		Picasso.with(context)
 						.load(fileName)
 						.networkPolicy(NetworkPolicy.OFFLINE)
 						.into(imageView, new Callback() {
 							@Override
 							public void onSuccess() {
-								Log.wtf("Offline load", "Successful");
+								Log.i(TAG, "Offline Loading Successful - " + fileName);
 							}
 							@Override
 							public void onError() {
-								Log.wtf("Offline load", "Failed");
+								Log.w(TAG, "Offline Loading Error -" + fileName);
 
 								Picasso.with(context).load(imageUrl).into(imageView, new Callback() {
 									@Override
 									public void onSuccess() {
-										Log.wtf("Picasso", "Load From Internet Success");
+										Log.i(TAG, "Internet Loading Successful - " + imageUrl);
 										if (context == null){
 											return;
 										}
@@ -137,24 +132,21 @@ public class Utils {
 
 									@Override
 									public void onError() {
-										Log.wtf("Picasso", "Load From Internet Failure");
-										Log.wtf("Picasso", "Loading From Internal Backup");
+										Log.i(TAG, "Internet Loading Failure - " + imageUrl);
 
 										// Convert the string and file path
 										File file = new File(context.getFilesDir(), fileName);
 
 										if (file.exists()) {
+											Log.i(TAG, "Internal Loading Successful - " + file.toString());
 											// set imageview using backed up file.
 											Picasso.with(context).load(file).into(imageView);
 										} else {
-											Log.wtf("Image", "No Backup Exist");
+											Log.i(TAG, "Internal Loading Failed - " + file.toString());
 										}
-
 									}
 								});
-
 							}
 						});
-
 	}
 }
